@@ -35,7 +35,7 @@ intent = discord.Intents.default()
 intent.members = True
 intent.message_content = True
 
-client = commands.Bot(command_prefix="!", intents=intent,case_insensitive=False)
+client = commands.Bot(command_prefix="!", intents=intent,case_insensitive=False, help_command=None)
 
 @client.event
 async def on_ready():
@@ -61,8 +61,9 @@ def add_user_to_db(ctx):
         userdatas.insert_one(user_data)
 
 
-@client.hybrid_command(name='cointoss')
-async def cointoss(ctx):
+@client.hybrid_command(name='cointoss', aliases=["flip","cf"])
+async def coinflip(ctx):
+    """Flip a coin"""
     add_user_to_db(ctx)
     coin = ["heads", "tails"]
     result = random.choice(coin)
@@ -71,8 +72,8 @@ async def cointoss(ctx):
 
 @client.hybrid_command(name='userinfo')
 async def userinfo(ctx, member: discord.Member = None):
+    """Display's user information"""
     add_user_to_db(ctx)
-    
     if member is None:
         member = ctx.author
 
@@ -98,6 +99,7 @@ async def userinfo(ctx, member: discord.Member = None):
 @client.hybrid_command(name='avatar')
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def avatar(ctx, member: discord.Member = None):
+    """Display's user avatar"""
     add_user_to_db(ctx)
     if member is None:
         member = ctx.author
@@ -133,6 +135,7 @@ async def avatar(ctx, member: discord.Member = None):
 @commands.has_permissions(ban_members=True)
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def ban(ctx, member: discord.Member = None):
+    """Ban user from the server"""
     if member is None:
         await ctx.send("Mention the user you want to ban")
     await member.ban()
@@ -150,6 +153,7 @@ async def ban_error(ctx, error):
 @commands.has_permissions(kick_members=True)
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def kick(ctx, member: discord.Member = None):
+    """Kick user from the server"""
     if member is None:
         await ctx.send("Mention the user you want to ban")
     await member.kick()
@@ -163,6 +167,15 @@ async def kick_error(ctx, error):
         await ctx.send("Command on cooldown, try again in few seconds")
 
 
+@client.hybrid_command(name='commands', aliases=["help"])
+async def commands(ctx):
+    """Shows available command"""
+    command_list = []
+    for command in client.commands:
+        command_list.append(f"**{command.name}**: {command.help}")
+
+    embed = discord.Embed(title="Available Commands", description="\n".join(command_list), color=0xfbadff)
+    await ctx.send(embed=embed)
 
 
 client.run(discord_token)
